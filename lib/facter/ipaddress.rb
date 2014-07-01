@@ -44,6 +44,44 @@ Facter.add(:ipaddress) do
 end
 
 Facter.add(:ipaddress) do
+  confine :kernel => :JUNOS
+  iflist = case Facter.value("hardwaremodel")
+     when /^(vmx)|(qfx51)/
+        [ 'em0' ]
+     when /^(ex22)|(ex32)|(qfx)/
+	['me0']
+     when /^ex92/
+	['fxp0']
+     when /^ex/
+        ['vme','me0']
+     when /^(srx)|(junosv-firefly)/
+        skip = true
+     else 
+        ['fxp0']
+  end
+  if skip
+    setcode { "127.0.0.1" }
+  else
+  setcode do
+    ip = nil
+    iflist.each do |ifname|
+      output = `/sbin/ifconfig #{ifname}`
+      output.split(/^\S/).each { |str|
+        if str =~ /local=([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)/
+          tmp = $1
+          unless tmp =~ /^127\./
+            ip = tmp
+            break
+          end
+        end
+      }
+    end
+    ip
+  end
+  end
+end
+
+Facter.add(:ipaddress) do
   confine :kernel => %w{FreeBSD OpenBSD Darwin DragonFly}
   setcode do
     ip = nil

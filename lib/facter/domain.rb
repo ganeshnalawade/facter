@@ -19,6 +19,16 @@
 #
 
 Facter.add(:domain) do
+  confine :kernel => :JUNOS 
+  setcode do
+     domain = %x{/usr/sbin/cli show configuration system domain-name}
+     if domain =~ /^domain-name (\S+);$/
+        $1
+     end
+  end
+end
+
+Facter.add(:domain) do
   setcode do
     # Get the domain from various sources; the order of these
     # steps is important

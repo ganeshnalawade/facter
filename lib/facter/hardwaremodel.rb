@@ -26,6 +26,16 @@ Facter.add(:hardwaremodel) do
 end
 
 Facter.add(:hardwaremodel) do
+  confine :kernel => :JUNOS
+  setcode do
+    model = %x{/sbin/sysctl hw.product.model}
+    if model =~ /:\s(\S+)\s/
+       $1
+    end
+  end
+end
+
+Facter.add(:hardwaremodel) do
   confine :operatingsystem => :windows
   setcode do
     # The cryptic windows cpu architecture models are documented in these places:
